@@ -79,7 +79,7 @@ class iLQR(BaseController):
 
         super(iLQR, self).__init__()
 
-    def fit(self, x0, us_init, n_iterations=100, tol=1e-6, on_iteration=None):
+    def fit(self, x0, us_init, goal_region_radius=0.1, n_iterations=100, tol=1e-6, on_iteration=None):
         """Computes the optimal controls.
 
         Args:
@@ -180,6 +180,12 @@ class iLQR(BaseController):
         self._nominal_xs = xs
         self._nominal_us = us
 
+        # if the robot get the the neighbourhood of the goal, then stop
+        for i in range(xs.shape[0]):
+            if np.linalg.norm(xs[i,:][:1] - self.cost.x_goal[:1]) < goal_region_radius:
+                xs = xs[:i+1]
+                us = us[:i]
+                break
         return xs, us
 
     def _control(self, xs, us, k, K, alpha=1.0):
